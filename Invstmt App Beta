@@ -1,0 +1,112 @@
+import json
+import os
+import random
+
+PORTFOLIO_FILE = "portfolio.json"
+
+
+class Investment:
+    def __init__(self, symbol, quantity, purchase_price):
+        self.symbol = symbol.upper()
+        self.quantity = quantity
+        self.purchase_price = purchase_price
+
+    def to_dict(self):
+        return {
+            "symbol": self.symbol,
+            "quantity": self.quantity,
+            "purchase_price": self.purchase_price
+        }
+
+    @staticmethod
+    def from_dict(data):
+        return Investment(data['symbol'], data['quantity'], data['purchase_price'])
+
+
+class Portfolio:
+    def __init__(self):
+        self.investments = []
+
+    def add_investment(self, symbol, quantity, purchase_price):
+        self.investments.append(Investment(symbol, quantity, purchase_price))
+
+    def view_portfolio(self):
+        if not self.investments:
+            print("Your portfolio is empty.")
+            return
+
+        print("\n--- Your Portfolio ---")
+        total_invested = 0
+        total_value = 0
+
+        for inv in self.investments:
+            current_price = self.get_mock_price(inv.symbol)
+            invested_amount = inv.quantity * inv.purchase_price
+            current_value = inv.quantity * current_price
+            total_invested += invested_amount
+            total_value += current_value
+
+            print(f"{inv.symbol}:")
+            print(f"  Quantity: {inv.quantity}")
+            print(f"  Purchase Price: ${inv.purchase_price:.2f}")
+            print(f"  Current Price (mock): ${current_price:.2f}")
+            print(f"  Invested: ${invested_amount:.2f}")
+            print(f"  Current Value: ${current_value:.2f}\n")
+
+        print(f"Total Invested: ${total_invested:.2f}")
+        print(f"Current Value: ${total_value:.2f}")
+        print(f"Gain/Loss: ${total_value - total_invested:.2f}\n")
+
+    def save(self):
+        with open(PORTFOLIO_FILE, "w") as f:
+            json.dump([inv.to_dict() for inv in self.investments], f)
+        print("Portfolio saved.\n")
+
+    def load(self):
+        if not os.path.exists(PORTFOLIO_FILE):
+            print("No saved portfolio found.\n")
+            return
+        with open(PORTFOLIO_FILE, "r") as f:
+            data = json.load(f)
+            self.investments = [Investment.from_dict(inv) for inv in data]
+        print("Portfolio loaded.\n")
+
+    @staticmethod
+    def get_mock_price(symbol):
+        # Simulate getting the current price
+        return round(random.uniform(0.5, 1.5) * 100, 2)
+
+
+def main():
+    portfolio = Portfolio()
+    portfolio.load()
+
+    while True:
+        print("=== Investment App ===")
+        print("1. Add Investment")
+        print("2. View Portfolio")
+        print("3. Save Portfolio")
+        print("4. Exit")
+
+        choice = input("Choose an option (1-4): ")
+
+        if choice == '1':
+            symbol = input("Enter symbol (e.g., AAPL): ")
+            quantity = float(input("Enter quantity: "))
+            purchase_price = float(input("Enter purchase price: "))
+            portfolio.add_investment(symbol, quantity, purchase_price)
+            print("Investment added.\n")
+        elif choice == '2':
+            portfolio.view_portfolio()
+        elif choice == '3':
+            portfolio.save()
+        elif choice == '4':
+            portfolio.save()
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice.\n")
+
+
+if __name__ == "__main__":
+    main()
